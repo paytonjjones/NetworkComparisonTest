@@ -147,8 +147,8 @@ NCT <- function(data1, data2,
   validCentrality <- c("closeness", "betweenness", 
                        "strength", "expectedInfluence", "bridgeStrength", 
                        "bridgeCloseness", "bridgeBetweenness", "bridgeExpectedInfluence")
-  bridgecen <- c("bridgeStrength", "bridgeCloseness", 
-                 "bridgeBetweenness", "bridgeExpectedInfluence")
+  bridgecen <- c("bridgeStrength", "bridgeBetweenness", 
+                 "bridgeCloseness", "bridgeExpectedInfluence")
   centrality <- if(centrality[1]=="all") {
     validCentrality
   }else {
@@ -210,6 +210,7 @@ NCT <- function(data1, data2,
       b2 <- networktools::bridge(nw2, communities=communities, useCommunities=useCommunities)
       names(b1) <- names(b2) <- c(bridgecen, "bridgeExpectedInfluence2step", 
                                   "communities")
+      b1$communities <- b2$communities <- NULL
       cen1 <- data.frame(c(cen1,b1))
       cen2 <- data.frame(c(cen2,b2))
     }
@@ -318,6 +319,7 @@ NCT <- function(data1, data2,
         b2permtemp <- networktools::bridge(r2perm, communities=communities, useCommunities=useCommunities)
         names(b1permtemp) <- names(b2permtemp) <- c(bridgecen, "bridgeExpectedInfluence2step", 
                                                     "communities")
+        b1permtemp$communities <- b2permtemp$communities <- NULL
         cen1permtemp <- data.frame(c(cen1permtemp,b1permtemp))
         cen2permtemp <- data.frame(c(cen2permtemp,b2permtemp))
       }
@@ -344,13 +346,13 @@ NCT <- function(data1, data2,
   if(test.edges==TRUE)
   {
     # vector with uncorrected p values
-    edges.pvaltemp <- colSums(diffedges.perm >= diffedges.realmat)/it 
+    edges.pvaltemp <- (colSums(diffedges.perm >= diffedges.realmat) + 1) / (it + 1)
     
     ## If all edges should be tested
     if(is.character(edges))
     {
       # corrected p-values (or not if p.adjust.methods='none')
-      corrpvals.all.temp <- round(p.adjust(edges.pvaltemp, method=p.adjust.methods),3)
+      corrpvals.all.temp <- p.adjust(edges.pvaltemp, method=p.adjust.methods)
       # matrix with corrected p values
       corrpvals.all
       corrpvals.all[upper.tri(corrpvals.all,diag=FALSE)] <- corrpvals.all.temp 
@@ -395,10 +397,10 @@ NCT <- function(data1, data2,
     
     res <- list(glstrinv.real = glstrinv.real,
                 glstrinv.sep = glstrinv.sep,
-                glstrinv.pval = sum(glstrinv.perm >= glstrinv.real)/it, 
+                glstrinv.pval = (sum(glstrinv.perm >= glstrinv.real) + 1) / (it + 1), 
                 glstrinv.perm = glstrinv.perm,
                 nwinv.real = nwinv.real,
-                nwinv.pval = sum(nwinv.perm >= nwinv.real)/it, 
+                nwinv.pval = (sum(nwinv.perm >= nwinv.real) + 1) / (it + 1), 
                 nwinv.perm = nwinv.perm,
                 edges.tested = edges.tested,
                 einv.real = einv.real,
@@ -416,10 +418,10 @@ NCT <- function(data1, data2,
     res <- list(
       glstrinv.real = glstrinv.real, 
       glstrinv.sep = glstrinv.sep,
-      glstrinv.pval = sum(glstrinv.perm >= glstrinv.real)/it, 
+      glstrinv.pval = (sum(glstrinv.perm >= glstrinv.real) + 1) / (it + 1), 
       glstrinv.perm = glstrinv.perm,
       nwinv.real = nwinv.real,
-      nwinv.pval = sum(nwinv.perm >= nwinv.real)/it,
+      nwinv.pval = (sum(nwinv.perm >= nwinv.real) + 1) / (it + 1),
       nwinv.perm = nwinv.perm, 
       nw1 = nw1,
       nw2 = nw2
@@ -434,7 +436,7 @@ NCT <- function(data1, data2,
     } 
     diffcen.realmat <- matrix(diffcen.real.vec, it, nnodes*length(centrality), 
                               byrow = TRUE)
-    diffcen.pvaltemp <- colSums(abs(diffcen.perm) >= abs(diffcen.realmat))/it
+    diffcen.pvaltemp <- (colSums(abs(diffcen.perm) >= abs(diffcen.realmat)) + 1) / (it + 1)
     diffcen.HBall <- p.adjust(diffcen.pvaltemp, method = p.adjust.methods)
     diffcen.pval <- matrix(diffcen.HBall, nnodes, length(centrality))
     diffcen.real <-  matrix(diffcen.real.vec, nrow=nnodes,ncol=length(centrality))
